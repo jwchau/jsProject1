@@ -29,12 +29,13 @@ function createControls() {
   playButton.mousePressed(togglePlaying);
   jumpButton = createButton("jump");
   jumpButton.mousePressed(jumpSong);
-  volumeSlider = createSlider(0, 1, 0.5, 0.01);
+  volumeSlider = createSlider(0, 1, 0.25, 0.01);
 }
 
-const jumpSong = () => {
-  var len = songs[1].duration();
-  songs[1].jump(len / 2);
+const jumpSong = (len = songs[1].duration()) => {
+  let t = random(len);
+  console.log(t);
+  songs[1].jump(t);
 }
 
 
@@ -44,7 +45,7 @@ function setup() {
 }
 
 function draw() {
-  background(0);
+  // background(0);
   ellipse(mouseX, mouseY, 5, 5);
   songs[1].setVolume(volumeSlider.value());
 }
