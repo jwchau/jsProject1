@@ -19,6 +19,13 @@ let fft;
 let bandWidth;
 let colorSlider;
 
+//part 4
+let cols;
+let rows;
+let current; // = new float[cols][rows];
+let previous; // = new float[cols][rows];
+let dampening = 0.95;
+
 //init data
 const volData = [0];
 for (let i = 0; i < 360; i++) {
@@ -63,35 +70,7 @@ const jumpSong = (len = song.duration()) => {
   song.jump(t);
 }
 
-const drawAmplitude = (vol) => {
-  const diam = map(vol, 0, 0.1, 1, 100);
-  ellipse(width / 2, height / 2, diam, diam);
-}
 
-const createWave = () => {
-  freqSlider = createSlider(200, 1200, 440, 20);
-  wave = new p5.Oscillator();
-  wave.setType('sine');
-  wave.start();
-  wave.freq(200);
-  wave.amp(envelope);
-}
-
-const createEnvelope = () => {
-  envelope = new p5.Envelope();
-  envelope.setADSR(0.05, 0.1, 0.25, 0.25);
-  envelope.setRange(0.05, 0);
-}
-
-const createMic = () => {
-  mic = new p5.AudioIn();
-  mic.start();
-}
-
-const drawEllipse = (val) => {
-  const size = map(val, 0, 0.5, 0, height);
-  ellipse(width / 2, height / 2, size, size);
-}
 
 const drawLine = () => {
   const vol = amp.getLevel();
@@ -102,57 +81,40 @@ const drawLine = () => {
   beginShape();
   for (let i = 0; i < volData.length; i++) {
     const y = map(volData[i], 0, 0.25, height / 2, 0);
-    vertex(i, y);
+    vertex(i + 200, y);
   }
   endShape();
-
-  if (volData.length > width - 200) volData.splice(0, 1);
+  if (volData.length > width - 400) volData.splice(0, 1);
 }
 
-const drawCircle = () => {
-  background(0);
+const drawLineFFT = () => {
   const spectrum = fft.analyze();
   const bw = bandWidth.value();
-  noStroke();
+  strokeWeight(10);
+  push();
   translate(width / 2, height / 2);
+  rotate(-90);
   for (let i = 0; i < spectrum.length; i += bw) {
-    const angle = map(i, 0, spectrum.length, 0, 360);
     const amp = spectrum[i];
+    const x = map(i, 0, spectrum.length, -width / 2, width / 2 );
+    const y = map(amp, 0, 256, 0, -height / 2);
     const c = map(i, 0, spectrum.length, 0, 255);
-    const color = (c + colorSlider.value()) % 360;
-    const r = map(amp, 0, 256, 100, width / 2);
-    const x = r * cos(angle);
-    const y = r * sin(angle);
+    const color = (c + colorSlider.value()) % 255;
     stroke(color, 255, 255);
-    line(0, 0, x, y);
+    point(x, y);
+    point(x, -y);
+    // drawRipples(x,y);
+    // drawRipples(x,-y);
   }
+  pop();
 }
 
-const drawCircleRects = () => {
-  background(0);
-  const spectrum = fft.analyze();
-  const bw = bandWidth.value();
-  noStroke();
-  translate(width / 2, height / 2);
-  for (let i = 0; i < spectrum.length; i += bw) {
-    const angle = map(i, 0, spectrum.length, 0, 10);
-    const amp = spectrum[i];
-    const c = map(i, 0, spectrum.length, 0, 255);
-    const color = (c + colorSlider.value()) % 360;
-    const h = map(amp, 0, 256, 100, height / 2);
-    rotate(-angle);
-    noStroke();
-    fill(color, 255, 255);
-    rect(0, 0, bw, h);
-  }
-}
 
 const createFFT = () => {
   fft = new p5.FFT(0.90, 1024);
 }
 
 const drawSpectrum = () => {
-  background(0);
   const spectrum = fft.analyze();
   const bw = bandWidth.value();
   noStroke();
@@ -166,27 +128,66 @@ const drawSpectrum = () => {
   }
 }
 
+const createRipple = () => {
+  cols = width;
+  rows = height;
+  current = new Array(cols).fill(0).map(n => new Array(rows).fill(0));
+  previous = new Array(cols).fill(0).map(n => new Array(rows).fill(0));
+}
+
+const renderRipples = () => {
+  loadPixels();
+  for (let i = 1; i < cols - 1; i++) {
+    for (let j = 1; j < rows - 1; j++) {
+      current[i][j] =
+        (previous[i - 1][j] +
+          previous[i + 1][j] +
+          previous[i][j - 1] +
+          previous[i][j + 1]) /
+          2 -
+        current[i][j];
+      current[i][j] = current[i][j] * dampening;
+
+      let index = (i + j * cols) * 4;
+      // pixels[index + 0] = current[i][j];
+      pixels[index + 0] = current[i][j];
+      pixels[index + 1] = current[i][j];
+      pixels[index + 2] = current[i][j];
+    }
+  }
+  updatePixels();
+
+  let temp = previous;
+  previous = current;
+  current = temp;
+}
+
+const drawRipples = (x,y) => {
+  previous[x][y] = 1000;
+}
+
+function mouseDragged() {
+  if (mouseX < width && mouseY < height) {
+    previous[mouseX][mouseY] = 1000;
+  }
+}
+
 function setup() {
-  createCanvas(800, 600);
+  pixelDensity(1);
+  createCanvas(800, 800);
   angleMode(DEGREES);
   colorMode(HSB);
   background(0);
   createControls();
   createFFT();
+  createRipple();
 }
 
 function draw() {
-  // ellipse(mouseX, mouseY, 10, 10);
   song.setVolume(volumeSlider.value());
+  background(0);
+  renderRipples();
   // drawLine();
-  // drawCircle();
+  drawLineFFT();
   // drawSpectrum();
-  // drawCircle();
-  // drawCircleRects();
-}
-
-function keyTyped() {
-  // if (key === ' ') {
-  //   envelope.play();  
-  // }
 }

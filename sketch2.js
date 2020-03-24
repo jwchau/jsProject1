@@ -1,13 +1,18 @@
 const minval = -1.5;
 const maxval = 1.5;
 
-let jaSlider;
-let jbSlider;
 
-let jA = -0.70176;
-let jB = -0.3842;
+let angle = 0;
 
 const drawMandel = () => {
+  // const jA = map(mouseX, 0, width, -1, 1);
+  // const jB = map(mouseY, 0, height, -1, 1);
+
+  // const jA = sin(angle);
+  const jA = 0;
+  angle += 1;
+  const jB = sin(angle);
+
   const maxIterations = 100;
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
@@ -21,14 +26,14 @@ const drawMandel = () => {
       let n = 0;
 
       while (n < maxIterations) {
-        let aa = a * a;
-        let bb = b * b;
-        let twoab = 2 * a * b;
-        
+        const aa = a * a;
+        const bb = b * b;
+        const twoab = 2 * a * b;
+
         if (abs(a + b) > 4) break;
 
-        a = aa - bb + jaSlider.value();
-        b = twoab + jbSlider.value();
+        a = aa - bb + jA;
+        b = twoab + jB;
         n++;
       }
 
@@ -43,34 +48,16 @@ const drawMandel = () => {
       pixels[pix + 3] = 255;
     }
   }
-}
-
-const createControls = () => {
-  jaSlider = createSlider(-1, 1, 0, 0.001);
-  jbSlider = createSlider(-1, 1, 0, 0.001);
+  updatePixels();
 }
 
 function setup() {
-  createCanvas(500, 500);
+  createCanvas(300, 300);
   angleMode(DEGREES);
-  colorMode(HSB);
   pixelDensity(1);
-  createControls();
+  loadPixels();
 }
 
 function draw() {
-  // frameRate(30);
-  loadPixels();
   drawMandel();
-  updatePixels();
-
-  noLoop();
-}
-
-function keyTyped() {
-  if (key === ' '){
-    loadPixels();
-    drawMandel();
-    updatePixels();
-  }
 }
