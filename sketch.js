@@ -16,6 +16,7 @@ let mic;
 
 //part 3
 let fft;
+let bandWidth;
 
 //init data
 const volData = [0];
@@ -31,7 +32,7 @@ function preload() {
     songs[i] = song;
     songs[i].setVolume(0.125);
   }
-  song = songs[2];
+  song = songs[Math.floor(Math.random() * 4) + 1];
 }
 
 function togglePlaying() {
@@ -47,9 +48,10 @@ function togglePlaying() {
 function createControls() {
   playButton = createButton("play");
   playButton.mousePressed(togglePlaying);
-  jumpButton = createButton("jump");
-  jumpButton.mousePressed(jumpSong);
+  // jumpButton = createButton("jump");
+  // jumpButton.mousePressed(jumpSong);
   volumeSlider = createSlider(0, 0.5, 0.25, 0.0125);
+  bandWidth = createSlider(2, 64, 16, 2);
   amp = new p5.Amplitude();
 }
 
@@ -107,44 +109,33 @@ const drawLine = () => {
 
 const drawCircle = () => {
   background(0);
-  const vol = amp.getLevel();
-  volData.push(vol);
-  noFill();
-  stroke(255);
+ 
+  
 
-  translate(width / 2, height / 2);
-
-  beginShape();
-  for (let i = 0; i < 360; i++) {
-    const r = map(volData[i], 0, 0.25, 50, 300);
-    const x = r * cos(i);
-    const y = r * sin(i);
-    vertex(x, y);
-  }
-  endShape();
-
-  if (volData.length > 360) volData.splice(0, 1);
 }
 
 const createFFT = () => {
-  fft = new p5.FFT(0, 512);
+  fft = new p5.FFT(0.90, 1024);
 }
 
 const drawSpectrum = () => {
   background(0);
   const spectrum = fft.analyze();
-  stroke(255);
-  noFill();
-  for (let i = 0; i < spectrum.length; i++) {
+  const bw = bandWidth.value();
+  // stroke(255);
+  for (let i = 0; i < spectrum.length; i += bw) {
     const amp = spectrum[i];
     const y = map(amp, 0, 256, height, 0);
-    line(i, height, i, y);
+    const c = map(i, 0, spectrum.length, 0, 360);
+    fill(c, 255, 255);
+    rect(i, y, bw, height - y);
   }
 }
 
 function setup() {
-  createCanvas(512, 512);
+  createCanvas(800, 600);
   angleMode(DEGREES);
+  colorMode(HSB);
   background(0);
   createControls();
   createFFT();
@@ -155,7 +146,8 @@ function draw() {
   song.setVolume(volumeSlider.value());
   // drawLine();
   // drawCircle();
-  drawSpectrum();
+  // drawSpectrum();
+  drawCircle();
 }
 
 function keyTyped() {
