@@ -1,6 +1,4 @@
 //globals
-const WIDTH = 512;
-const HEIGHT = 512;
 const songs = {};
 let song;
 
@@ -63,7 +61,7 @@ const jumpSong = (len = song.duration()) => {
 
 const drawAmplitude = (vol) => {
   const diam = map(vol, 0, 0.1, 1, 100);
-  ellipse(WIDTH / 2, HEIGHT / 2, diam, diam);
+  ellipse(width / 2, height / 2, diam, diam);
 }
 
 const createWave = () => {
@@ -87,8 +85,8 @@ const createMic = () => {
 }
 
 const drawEllipse = (val) => {
-  const size = map(val, 0, 0.5, 0, HEIGHT);
-  ellipse(WIDTH / 2, HEIGHT / 2, size, size);
+  const size = map(val, 0, 0.5, 0, height);
+  ellipse(width / 2, height / 2, size, size);
 }
 
 const drawLine = () => {
@@ -99,12 +97,12 @@ const drawLine = () => {
 
   beginShape();
   for (let i = 0; i < volData.length; i++) {
-    const y = map(volData[i], 0, 0.25, HEIGHT / 2, 0);
+    const y = map(volData[i], 0, 0.25, height / 2, 0);
     vertex(i, y);
   }
   endShape();
 
-  if (volData.length > WIDTH - 200) volData.splice(0, 1);
+  if (volData.length > width - 200) volData.splice(0, 1);
 }
 
 const drawCircle = () => {
@@ -114,7 +112,7 @@ const drawCircle = () => {
   noFill();
   stroke(255);
 
-  translate(WIDTH / 2, HEIGHT / 2);
+  translate(width / 2, height / 2);
 
   beginShape();
   for (let i = 0; i < 360; i++) {
@@ -140,12 +138,12 @@ const drawSpectrum = () => {
   for (let i = 0; i < spectrum.length; i++) {
     const amp = spectrum[i];
     const y = map(amp, 0, 256, height, 0);
-    drawLine(i, height, i, y);
+    line(i, height, i, y);
   }
 }
 
 function setup() {
-  createCanvas(WIDTH, HEIGHT);
+  createCanvas(512, 512);
   angleMode(DEGREES);
   background(0);
   createControls();
