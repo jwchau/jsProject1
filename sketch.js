@@ -17,6 +17,7 @@ let mic;
 //part 3
 let fft;
 let bandWidth;
+let colorSlider;
 
 //init data
 const volData = [0];
@@ -50,6 +51,7 @@ function createControls() {
   playButton.mousePressed(togglePlaying);
   // jumpButton = createButton("jump");
   // jumpButton.mousePressed(jumpSong);
+  colorSlider = createSlider(0, 360, 0, 1);
   volumeSlider = createSlider(0, 0.5, 0.25, 0.0125);
   bandWidth = createSlider(2, 64, 16, 2);
   amp = new p5.Amplitude();
@@ -109,9 +111,40 @@ const drawLine = () => {
 
 const drawCircle = () => {
   background(0);
- 
-  
+  const spectrum = fft.analyze();
+  const bw = bandWidth.value();
+  noStroke();
+  translate(width / 2, height / 2);
+  for (let i = 0; i < spectrum.length; i += bw) {
+    const angle = map(i, 0, spectrum.length, 0, 360);
+    const amp = spectrum[i];
+    const c = map(i, 0, spectrum.length, 0, 255);
+    const color = (c + colorSlider.value()) % 360;
+    const r = map(amp, 0, 256, 100, width / 2);
+    const x = r * cos(angle);
+    const y = r * sin(angle);
+    stroke(color, 255, 255);
+    line(0, 0, x, y);
+  }
+}
 
+const drawCircleRects = () => {
+  background(0);
+  const spectrum = fft.analyze();
+  const bw = bandWidth.value();
+  noStroke();
+  translate(width / 2, height / 2);
+  for (let i = 0; i < spectrum.length; i += bw) {
+    const angle = map(i, 0, spectrum.length, 0, 10);
+    const amp = spectrum[i];
+    const c = map(i, 0, spectrum.length, 0, 255);
+    const color = (c + colorSlider.value()) % 360;
+    const h = map(amp, 0, 256, 100, height / 2);
+    rotate(-angle);
+    noStroke();
+    fill(color, 255, 255);
+    rect(0, 0, bw, h);
+  }
 }
 
 const createFFT = () => {
@@ -122,12 +155,13 @@ const drawSpectrum = () => {
   background(0);
   const spectrum = fft.analyze();
   const bw = bandWidth.value();
-  // stroke(255);
+  noStroke();
   for (let i = 0; i < spectrum.length; i += bw) {
     const amp = spectrum[i];
     const y = map(amp, 0, 256, height, 0);
     const c = map(i, 0, spectrum.length, 0, 360);
-    fill(c, 255, 255);
+    const color = (c + colorSlider.value()) % 360;
+    fill(color, 255, 255);
     rect(i, y, bw, height - y);
   }
 }
@@ -147,7 +181,8 @@ function draw() {
   // drawLine();
   // drawCircle();
   // drawSpectrum();
-  drawCircle();
+  // drawCircle();
+  // drawCircleRects();
 }
 
 function keyTyped() {
